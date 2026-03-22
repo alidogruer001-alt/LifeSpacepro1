@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LifeSpace Pro - İkinci Beyin</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: { 850: '#1e293b', 900: '#0f172a', 950: '#020617' },
+                        primary: { 50: '#eff6ff', 100: '#dbeafe', 400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8' },
+                    },
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+                    animation: {
+                        'slide-up': 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'fade-in': 'fadeIn 0.2s ease-out forwards',
+                        'pulse-glow': 'pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        slideUp: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        pulseGlow: { '0%, 100%': { opacity: '1' }, '50%': { opacity: '.5' } }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
+        .dark body { background-color: #020617; }
+        
+        /* Performans için blur efekti azaltıldı */
+        .glass-header { background: rgba(255, 255, 255, 0.95); border-bottom: 1px solid rgba(0,0,0,0.05); backdrop-filter: blur(8px); z-index: 50;}
+        .dark .glass-header { background: rgba(2, 6, 23, 0.95); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        
+        /* Performans için gölgeler hafifletildi */
+        .glass-card { background: #ffffff; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02); border: 1px solid rgba(0,0,0,0.04); border-radius: 1.25rem; }
+        .dark .glass-card { background: #0f172a; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15); }
+        
+        /* Rich Text Editor Styles - Optimize Edildi */
+        .rich-editor { min-height: 200px; outline: none; padding: 1rem; font-size: 1.05rem; line-height: 1.7; color: #334155; overflow-y: auto;}
+        .dark .rich-editor { color: #e2e8f0; }
+        .rich-editor:empty:before { content: attr(placeholder); color: #94a3b8; pointer-events: none; display: block; font-style: italic; }
+        .rich-editor h1, .read-only-note h1 { font-size: 1.75rem; font-weight: 800; margin-bottom: 0.5rem; color: #0f172a; }
+        .dark .rich-editor h1, .dark .read-only-note h1 { color: #f8fafc; }
+        .rich-editor h2, .read-only-note h2 { font-size: 1.35rem; font-weight: 700; margin-bottom: 0.5rem; color: #1e293b; }
+        .dark .rich-editor h2, .dark .read-only-note h2 { color: #f1f5f9; }
+        .rich-editor ul, .read-only-note ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+        .rich-editor ol, .read-only-note ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+        .rich-editor b, .rich-editor strong, .read-only-note b, .read-only-note strong { font-weight: 700; color: #0f172a; }
+        .dark .rich-editor b, .dark .rich-editor strong, .dark .read-only-note b, .dark .read-only-note strong { color: #f8fafc; }
+        .rich-editor u, .read-only-note u { text-decoration: underline; }
+        .rich-editor s, .rich-editor strike, .read-only-note s, .read-only-note strike { text-decoration: line-through; color: #94a3b8; }
+        
+        .read-only-note { font-size: 1.05rem; line-height: 1.7; color: #334155; }
+        .dark .read-only-note { color: #e2e8f0; }
+
+        .loader-premium { width: 36px; height: 36px; border: 3px solid #e2e8f0; border-bottom-color: #3b82f6; border-radius: 50%; display: inline-block; animation: rotation 0.8s linear infinite; }
+        .dark .loader-premium { border-color: #334155; border-bottom-color: #3b82f6; }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+        
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+        .custom-line-clamp { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="text-slate-800 dark:text-slate-100 transition-colors duration-300">
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect, useRef, useMemo, memo } from 'https://esm.sh/react@18.2.0';
+        import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
+        import { 
+            Check, Trash2, Calendar, Settings, Moon, Sun, User, LogOut, Plus, 
+            Camera, Save, X, Menu, Home, CheckCircle2, Circle, ChevronLeft, ChevronRight, 
+            FileText, Image as ImageIcon, Smile, Type, Bold, Italic, List, AlignLeft,
+            Heading1, Heading2, BookOpen, Clock, AlertTriangle, LayoutDashboard, History, Repeat,
+            Search, Maximize2, MoreVertical, CalendarDays, Underline, Strikethrough, PaintBucket, 
+            AlignRight, AlignCenter, ListTodo, Shield, Database, Bell, Palette, XCircle, ListChecks, Edit3, ShieldAlert, Download, MailCheck, Edit, AppWindow
+        } from 'https://esm.sh/lucide-react@0.292.0';
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken, updateProfile, updatePassword,
+            createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, EmailAuthProvider, reauthenticateWithCredential,
+            GoogleAuthProvider, signInWithPopup, signOut, reauthenticateWithPopup
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc, writeBatch, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBLu7h5BjN8foDWLM4uoYzn7GlEXpIBOJE",
+            authDomain: "lifespacepro-f54e8.firebaseapp.com",
+            projectId: "lifespacepro-f54e8",
+            storageBucket: "lifespacepro-f54e8.firebasestorage.app",
+            messagingSenderId: "1049697217714",
+            appId: "1:1049697217714:web:0e12337ece7945146aedab",
+            measurementId: "G-958P2C8JXB"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const googleProvider = new GoogleAuthProvider();
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        // PWA Manifest Enjeksiyonu (Yeni Logo ile)
+        const svgIcon = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='5' fill='#2563eb'/><g stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'><rect width='7' height='9' x='3' y='3' rx='1'/><rect width='7' height='5' x='14' y='3' rx='1'/><rect width='7' height='9' x='14' y='12' rx='1'/><rect width='7' height='5' x='3' y='16' rx='1'/></g></svg>`;
+        const manifest = {
+            name: "LifeSpace Pro",
+            short_name: "LifeSpace",
+            start_url: ".",
+            display: "standalone",
+            background_color: "#f8fafc",
+            theme_color: "#2563eb",
+            icons: [{
+                src: "data:image/svg+xml;utf8," + encodeURIComponent(svgIcon),
+                sizes: "512x512",
+                type: "image/svg+xml",
+                purpose: "any maskable"
+            }]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+        const manifestURL = URL.createObjectURL(manifestBlob);
+        document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="${manifestURL}">`);
+
+        const getTodayDate = () => new Date().toISOString().split('T')[0];
+        const formatDateTr = (dateStr) => {
+            try { return new Date(dateStr).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' }); } 
+            catch { return dateStr; }
+        };
+        const getMonthName = (monthIndex) => ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'][monthIndex];
+
+        const sanitizeHTML = (html) => {
+            if (!html) return '';
+            return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "");
+        };
+
+        const compressImage = (file, callback) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 1000;
+                    let width = img.width; let height = img.height;
+                    if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    callback(canvas.toDataURL('image/jpeg', 0.6));
+                }
+            }
+        };
+
+        const EMOJIS = ['📝','💼','💻','📚','🎓','📊','📈','📅','📌','⏰','🧠','💡','☕','🤝','🏢','🏫','🔬','📚','✏️','📎','📁','📖','🗂️','✅','❌','⚠️','🔥','🎯','🏆','🥇','💰','✉️','📱','✈️','🌍','🔧'];
+
+        const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true, customClass: { popup: 'rounded-xl shadow-2xl' }});
+
+        // ==========================================
+        // Optimize Edilmiş Zengin Metin Editörü (Re-render Yapmaz)
+        // ==========================================
+        const RichEditor = memo(({ initialContent, contentRef }) => {
+            const editorRef = useRef(null);
+            
+            useEffect(() => {
+                if(editorRef.current && editorRef.current.innerHTML === '') {
+                    editorRef.current.innerHTML = initialContent || '';
+                }
+            }, [initialContent]);
+            
+            const handleInput = () => { 
+                // Isınmayı ve kasmayı önlemek için HTML'i yazarken anlık sanitize etmiyoruz, bunu SADECE veritabanına kaydederken yapacağız.
+                if(contentRef) contentRef.current = editorRef.current.innerHTML; 
+            };
+            
+            const exec = (command, value=null) => { 
+                document.execCommand(command, false, value); 
+                editorRef.current.focus(); 
+                handleInput(); 
+            };
+
+            const TEXT_COLORS = ['#0f172a', '#ef4444', '#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6'];
+            const BG_COLORS = ['transparent', '#fef08a', '#bfdbfe', '#fbcfe8', '#bbf7d0', '#fed7aa'];
+
+            return (
+                <div className="flex flex-col h-full bg-white dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden focus-within:border-primary-400 transition-colors">
+                    {/* MOBİL VE MASAÜSTÜNDE ARAÇ ÇUBUĞU ÜSTTE (Klavye çakışmasını engellemek için) */}
+                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 p-2 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-10 shrink-0">
+                        <div className="flex bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700 p-0.5">
+                            <button onClick={()=>exec('bold')} className="p-2 sm:p-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors" title="Kalın"><Bold size={18}/></button>
+                            <button onClick={()=>exec('italic')} className="p-2 sm:p-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors" title="İtalik"><Italic size={18}/></button>
+                            <button onClick={()=>exec('underline')} className="p-2 sm:p-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors" title="Altı Çizili"><Underline size={18}/></button>
+                            <button onClick={()=>exec('strikeThrough')} className="p-2 sm:p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors" title="Üstü Çizili"><Strikethrough size={18}/></button>
+                        </div>
+
+                        <div className="flex items-center gap-1 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700 p-1">
+                            <div className="relative group">
+                                <button className="p-1.5 sm:p-1.5 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors font-bold flex items-center gap-1" title="Metin Rengi">
+                                    <Type size={18}/> <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                                </button>
+                                <div className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-2 rounded-xl shadow-xl flex gap-1.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[70]">
+                                    {TEXT_COLORS.map(c => <button key={c} onClick={()=>exec('foreColor', c)} className="w-6 h-6 rounded-full border border-slate-200 dark:border-slate-600 hover:scale-110 transition-transform" style={{backgroundColor: c}}></button>)}
+                                </div>
+                            </div>
+                            <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-0.5"></div>
+                            <div className="relative group">
+                                <button className="p-1.5 sm:p-1.5 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors flex items-center gap-1" title="Vurgu Rengi">
+                                    <PaintBucket size={18}/> <div className="w-2 h-2 rounded-full bg-yellow-400"></div>
+                                </button>
+                                <div className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-2 rounded-xl shadow-xl flex gap-1.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[70]">
+                                    {BG_COLORS.map(c => <button key={c} onClick={()=>exec('hiliteColor', c)} className={`w-6 h-6 rounded-full border border-slate-200 dark:border-slate-600 hover:scale-110 transition-transform ${c==='transparent'?'bg-white bg-opacity-10 flex items-center justify-center text-xs text-rose-500 font-bold':''}`} style={c !== 'transparent' ? {backgroundColor: c} : {}}>{c==='transparent'?'/':''}</button>)}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="flex bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700 p-0.5">
+                            <button onClick={()=>exec('formatBlock', 'H1')} className="p-1.5 sm:p-2 px-3 text-slate-800 dark:text-slate-100 font-black hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors">H1</button>
+                            <button onClick={()=>exec('formatBlock', 'H2')} className="p-1.5 sm:p-2 px-3 text-slate-800 dark:text-slate-100 font-bold hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors">H2</button>
+                        </div>
+
+                        <div className="flex bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700 p-0.5">
+                            <button onClick={()=>exec('insertUnorderedList')} className="p-2 sm:p-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors"><List size={18}/></button>
+                        </div>
+                    </div>
+                    {/* EDİTÖR */}
+                    <div 
+                        ref={editorRef} onInput={handleInput} contentEditable 
+                        className="rich-editor flex-1 cursor-text" 
+                        placeholder="Önemli düşünceler, toplantı notları..."
+                    />
+                </div>
+            );
+        });
+
+        function App() {
+            const [user, setUser] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [darkMode, setDarkMode] = useState(() => localStorage.getItem('kt_theme') === 'dark');
+            const [activeTab, setActiveTab] = useState('daily');
+            const [sidebarOpen, setSidebarOpen] = useState(false);
+
+            // Auth
+            const [email, setEmail] = useState(''); const [password, setPassword] = useState('');
+            const [username, setUsername] = useState(''); const [authMode, setAuthMode] = useState('register');
+            const [authLoading, setAuthLoading] = useState(false);
+
+            // Data
+            const [tasks, setTasks] = useState([]);
+            const [notes, setNotes] = useState([]);
+            const [journals, setJournals] = useState({});
+            const [profile, setProfile] = useState({ avatarBase64: '', name: '', email: '' });
+
+            // UI
+            const [selectedDate, setSelectedDate] = useState(getTodayDate());
+            const [calDate, setCalDate] = useState(new Date());
+            const [searchQuery, setSearchQuery] = useState('');
+
+            // Task Modal
+            const [showTaskModal, setShowTaskModal] = useState(false);
+            const [selectedTaskForView, setSelectedTaskForView] = useState(null);
+            const [taskForm, setTaskForm] = useState({ 
+                title: '', description: '', priority: 'Orta', date: getTodayDate(), emoji: '📝', 
+                repeat: 'none', repeatEndDate: '', subtasks: [] 
+            });
+            const [newSubtask, setNewSubtask] = useState('');
+            
+            // Note Modal
+            const [showNoteModal, setShowNoteModal] = useState(false);
+            const [isNoteEditing, setIsNoteEditing] = useState(false); // Yeni: Okuma Modu
+            const [currentNote, setCurrentNote] = useState({ id: null, title: '', content: '', customDate: getTodayDate(), updatedAt: null });
+            const noteContentRef = useRef(''); // Yeni: Performans için içeriği ref'te tutuyoruz
+
+            // Journal
+            const [localJournalContent, setLocalJournalContent] = useState('');
+            const [localJournalImages, setLocalJournalImages] = useState([]);
+            const [isJournalSaving, setIsJournalSaving] = useState(false);
+            const [viewingImageIndex, setViewingImageIndex] = useState(null);
+
+            // Settings & Wiping
+            const [showWipeDataModal, setShowWipeDataModal] = useState(false);
+            const [wipePassword, setWipePassword] = useState('');
+            const [wipePasswordConfirm, setWipePasswordConfirm] = useState('');
+            const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+            const [selectedTaskIdsForDelete, setSelectedTaskIdsForDelete] = useState([]);
+            const [editName, setEditName] = useState('');
+            const [currentPassword, setCurrentPassword] = useState('');
+            const [newPassword, setNewPassword] = useState('');
+            const [newPasswordConfirm, setNewPasswordConfirm] = useState('');
+            
+            // PWA
+            const [deferredPrompt, setDeferredPrompt] = useState(null);
+            const [isInstallable, setIsInstallable] = useState(false);
+
+            const profilePhotoRef = useRef(null);
+            const journalFileRef = useRef(null);
+
+            useEffect(() => {
+                document.documentElement.classList.toggle('dark', darkMode);
+                localStorage.setItem('kt_theme', darkMode ? 'dark' : 'light');
+            }, [darkMode]);
+
+            useEffect(() => {
+                setEmail(''); setPassword(''); setUsername('');
+            }, [authMode]);
+
+            useEffect(() => {
+                const handler = (e) => { e.preventDefault(); setDeferredPrompt(e); setIsInstallable(true); };
+                window.addEventListener('beforeinstallprompt', handler);
+                return () => window.removeEventListener('beforeinstallprompt', handler);
+            }, []);
+
+            const handleInstallApp = async () => {
+                if (!deferredPrompt) return;
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') setIsInstallable(false);
+                setDeferredPrompt(null);
+            };
+
+            const handleLogout = async () => { await signOut(auth); };
+
+            useEffect(() => {
+                const initAuth = async () => {
+                    try {
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await signInWithCustomToken(auth, __initial_auth_token);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                    } catch (err) { console.error("Auth error", err); setLoading(false); }
+                };
+                initAuth();
+
+                const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+                    setUser(currentUser);
+                    if (!currentUser) { setTasks([]); setNotes([]); setJournals({}); setLoading(false); }
+                });
+                return () => unsubscribe();
+            }, []);
+
+            useEffect(() => {
+                if (!user || user.isAnonymous) { setLoading(false); return; }
+                
+                setEditName(user.displayName || 'Kullanıcı');
+                
+                const unsubProfile = onSnapshot(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'), (docSnap) => {
+                    if(docSnap.exists()) { setProfile(docSnap.data()); if(docSnap.data().name) setEditName(docSnap.data().name); }
+                });
+
+                const unsubTasks = onSnapshot(collection(db, 'artifacts', appId, 'users', user.uid, 'tasks'), (snapshot) => {
+                    const t = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
+                    t.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+                    setTasks(t);
+                });
+
+                const unsubNotes = onSnapshot(collection(db, 'artifacts', appId, 'users', user.uid, 'notes'), (snapshot) => {
+                    const n = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
+                    n.sort((a,b) => new Date(b.customDate || b.updatedAt) - new Date(a.customDate || a.updatedAt));
+                    setNotes(n);
+                });
+
+                const unsubJournals = onSnapshot(collection(db, 'artifacts', appId, 'users', user.uid, 'journals'), (snapshot) => {
+                    const j = {}; snapshot.docs.forEach(d => { j[d.id] = d.data(); });
+                    setJournals(j);
+                });
+
+                setLoading(false);
+                return () => { unsubProfile(); unsubTasks(); unsubNotes(); unsubJournals(); };
+            }, [user]);
+
+            useEffect(() => {
+                setLocalJournalContent(journals[selectedDate]?.content || '');
+                let imgs = [];
+                if (journals[selectedDate]?.images) imgs = journals[selectedDate].images;
+                else if (journals[selectedDate]?.imageBase64) imgs = [journals[selectedDate].imageBase64];
+                setLocalJournalImages(imgs);
+            }, [selectedDate, journals]);
+
+
+            // --- AUTH ---
+            const handleAuthForm = async (e) => {
+                e.preventDefault(); setAuthLoading(true);
+                try {
+                    if (authMode === 'register') {
+                        const cred = await createUserWithEmailAndPassword(auth, email, password);
+                        await updateProfile(cred.user, { displayName: username });
+                        await setDoc(doc(db, 'artifacts', appId, 'users', cred.user.uid, 'profile', 'data'), { email, name: username });
+                        await sendEmailVerification(cred.user);
+                        Swal.fire('Başarılı', 'Hesabınız oluşturuldu. Lütfen e-posta adresinize gelen bağlantı ile hesabınızı doğrulayın.', 'success');
+                    } else if (authMode === 'login') { 
+                        const cred = await signInWithEmailAndPassword(auth, email, password);
+                        if (!cred.user.emailVerified) Toast.fire({ icon: 'warning', title: 'Lütfen e-posta adresinizi doğrulayın.' });
+                    } else if (authMode === 'reset') {
+                        if (!email) { Swal.fire('Uyarı', 'Lütfen e-posta adresinizi girin.', 'warning'); setAuthLoading(false); return; }
+                        await sendPasswordResetEmail(auth, email);
+                        Swal.fire('Başarılı', 'Şifre sıfırlama bağlantısı gönderildi.', 'success'); 
+                        setAuthMode('login');
+                    }
+                } catch (error) { 
+                    console.error("Auth Error:", error);
+                    let msg = 'İşlem başarısız. Bilgileri kontrol edin.';
+                    if(error.code === 'auth/email-already-in-use') msg = 'Bu e-posta adresi zaten kullanımda.';
+                    if(error.code === 'auth/wrong-password') msg = 'Hatalı şifre.';
+                    if(error.code === 'auth/user-not-found') msg = 'Kullanıcı bulunamadı.';
+                    Swal.fire('Hata', msg, 'error'); 
+                }
+                setAuthLoading(false);
+            };
+
+            const handleGoogleLogin = async () => {
+                try {
+                    setAuthLoading(true);
+                    const result = await signInWithPopup(auth, googleProvider);
+                    await setDoc(doc(db, 'artifacts', appId, 'users', result.user.uid, 'profile', 'data'), { email: result.user.email, name: result.user.displayName, avatarBase64: result.user.photoURL }, { merge: true });
+                } catch (error) { 
+                    let msg = 'Google girişi başarısız veya pencere kapatıldı.';
+                    if(error.code === 'auth/popup-blocked') msg = 'Lütfen tarayıcınızın açılır pencere (popup) engelleyicisini kapatın.';
+                    Swal.fire('Erişim Hatası', msg, 'error'); 
+                } 
+                finally { setAuthLoading(false); }
+            };
+
+
+            // --- TASKS ---
+            const saveTask = async () => {
+                if (!user || user.isAnonymous) return;
+                if (!taskForm.title.trim()) { Toast.fire({icon:'warning', title:'Görev adı giriniz.'}); return; }
+                
+                const baseTask = { 
+                    title: taskForm.title, description: sanitizeHTML(taskForm.description), priority: taskForm.priority, 
+                    emoji: taskForm.emoji, status: taskForm.status || 'pending', subtasks: taskForm.subtasks || [],
+                    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+                };
+
+                if (taskForm.repeat === 'none' || taskForm.id) {
+                    const taskId = taskForm.id || Date.now().toString();
+                    await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'tasks', taskId), { ...baseTask, date: taskForm.date });
+                    Toast.fire({icon:'success', title: 'Görev kaydedildi'});
+                } else {
+                    let datesToCreate = [];
+                    const [yStr, mStr, dStr] = taskForm.date.split('-');
+                    const y = parseInt(yStr), m = parseInt(mStr), dNum = parseInt(dStr);
+                    const localDate = new Date(y, m - 1, dNum);
+                    
+                    if (taskForm.repeat === 'this_week') {
+                        const day = localDate.getDay();
+                        const diff = localDate.getDate() - day + (day === 0 ? -6 : 1); 
+                        const monday = new Date(localDate); monday.setDate(diff);
+                        for(let i=0; i<7; i++) {
+                            const cur = new Date(monday); cur.setDate(monday.getDate() + i);
+                            datesToCreate.push(`${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`);
+                        }
+                    } else if (taskForm.repeat === 'this_month') {
+                        const daysInMonth = new Date(y, m, 0).getDate();
+                        for(let i=1; i<=daysInMonth; i++) {
+                            datesToCreate.push(`${y}-${String(m).padStart(2, '0')}-${String(i).padStart(2, '0')}`);
+                        }
+                    } else if (taskForm.repeat === 'custom_range' && taskForm.repeatEndDate) {
+                        let curDate = new Date(taskForm.date);
+                        let endD = new Date(taskForm.repeatEndDate);
+                        if(endD < curDate) { Toast.fire({icon:'error', title:'Bitiş tarihi başlangıçtan önce olamaz'}); return; }
+                        while(curDate <= endD) {
+                            datesToCreate.push(curDate.toISOString().split('T')[0]);
+                            curDate.setDate(curDate.getDate() + 1);
+                        }
+                    }
+
+                    if(datesToCreate.length === 0) datesToCreate.push(taskForm.date);
+
+                    const batch = writeBatch(db);
+                    datesToCreate.forEach((dateStr, i) => {
+                        const taskId = Date.now().toString() + "_" + i + Math.random().toString(36).substr(2, 5);
+                        const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'tasks', taskId);
+                        batch.set(docRef, { ...baseTask, date: dateStr });
+                    });
+                    await batch.commit();
+                    Toast.fire({icon:'success', title: `${datesToCreate.length} güne görev atandı!`});
+                }
+                setShowTaskModal(false);
+            };
+
+            const toggleTaskStatus = async (task, e) => {
+                if(e) e.stopPropagation();
+                if (!user || user.isAnonymous) return;
+                await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'tasks', task.id), { status: task.status === 'pending' ? 'completed' : 'pending' }, {merge: true});
+            };
+
+            const toggleSubtask = async (task, subtaskId, e) => {
+                if(e) e.stopPropagation();
+                if (!user || user.isAnonymous) return;
+                const updatedSubtasks = task.subtasks.map(st => st.id === subtaskId ? {...st, completed: !st.completed} : st);
+                await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'tasks', task.id), { subtasks: updatedSubtasks }, {merge: true});
+                
+                if(selectedTaskForView && selectedTaskForView.id === task.id) {
+                    setSelectedTaskForView(prev => ({...prev, subtasks: updatedSubtasks}));
+                }
+            }
+
+            const deleteTask = async (id) => {
+                if (!user || user.isAnonymous) return;
+                Swal.fire({ title: 'Silinsin mi?', text: "Geri alınamaz.", icon: 'warning', showCancelButton: true, confirmButtonText: 'Sil', cancelButtonText: 'İptal', confirmButtonColor: '#ef4444' })
+                .then(async (result) => {
+                    if (result.isConfirmed) { await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'tasks', id)); Toast.fire({icon:'success', title:'Silindi'}); setShowTaskModal(false); setSelectedTaskForView(null); }
+                });
+            };
+
+            const addSubtaskToForm = () => {
+                if(!newSubtask.trim()) return;
+                setTaskForm(prev => ({ ...prev, subtasks: [...prev.subtasks, { id: Date.now().toString(), title: newSubtask, completed: false }] }));
+                setNewSubtask('');
+            };
+            const removeSubtaskFromForm = (id) => {
+                setTaskForm(prev => ({ ...prev, subtasks: prev.subtasks.filter(st => st.id !== id) }));
+            };
+
+            const executeBulkDelete = async () => {
+                if (!user || user.isAnonymous || selectedTaskIdsForDelete.length === 0) return;
+                Swal.fire({ title: `${selectedTaskIdsForDelete.length} Görev Silinecek!`, text: "Kalıcı olarak silinecekler, emin misiniz?", icon: 'warning', showCancelButton: true, confirmButtonText: 'Evet, Sil', confirmButtonColor: '#ef4444' })
+                .then(async (result) => {
+                    if(result.isConfirmed) {
+                        const batch = writeBatch(db);
+                        selectedTaskIdsForDelete.forEach(id => {
+                            const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'tasks', id);
+                            batch.delete(docRef);
+                        });
+                        await batch.commit();
+                        Toast.fire({icon:'success', title: 'Görevler temizlendi.'});
+                        setShowBulkDeleteModal(false); setSelectedTaskIdsForDelete([]);
+                    }
+                });
+            };
+
+            const executeWipeData = async () => {
+                if (!user || user.isAnonymous) return;
+                const isGoogleAuth = user.providerData.some(p => p.providerId === 'google.com');
+
+                if (!isGoogleAuth && (!wipePassword || wipePassword !== wipePasswordConfirm)) {
+                    Swal.fire('Hata', 'Şifreler eşleşmiyor veya boş!', 'error'); return;
+                }
+                
+                setLoading(true);
+                try {
+                    if (isGoogleAuth) {
+                        await reauthenticateWithPopup(user, googleProvider);
+                    } else {
+                        const credential = EmailAuthProvider.credential(user.email, wipePassword);
+                        await reauthenticateWithCredential(user, credential);
+                    }
+                    
+                    const batch = writeBatch(db);
+                    const tasksSnap = await getDocs(collection(db, 'artifacts', appId, 'users', user.uid, 'tasks'));
+                    tasksSnap.forEach(doc => batch.delete(doc.ref));
+                    const notesSnap = await getDocs(collection(db, 'artifacts', appId, 'users', user.uid, 'notes'));
+                    notesSnap.forEach(doc => batch.delete(doc.ref));
+                    const journalsSnap = await getDocs(collection(db, 'artifacts', appId, 'users', user.uid, 'journals'));
+                    journalsSnap.forEach(doc => batch.delete(doc.ref));
+                    
+                    await batch.commit();
+                    Toast.fire({icon:'success', title:'Tüm verileriniz başarıyla imha edildi.'});
+                    setShowWipeDataModal(false); setWipePassword(''); setWipePasswordConfirm('');
+                } catch(e) {
+                    Swal.fire('Güvenlik İhlali', 'Doğrulama başarısız. İşlem reddedildi.', 'error');
+                }
+                setLoading(false);
+            };
+
+            // --- JOURNALS ---
+            const saveJournalToDB = async () => {
+                if (!user || user.isAnonymous) return;
+                setIsJournalSaving(true);
+                const data = { content: sanitizeHTML(localJournalContent), images: localJournalImages, updatedAt: new Date().toISOString() };
+                await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'journals', selectedDate), data, {merge: true});
+                setIsJournalSaving(false);
+                Toast.fire({icon:'success', title:'Günlük Kaydedildi'});
+            };
+
+            const handleJournalImage = (e) => {
+                const files = e.target.files; if(files.length === 0) return;
+                compressImage(files[0], (base64) => { setLocalJournalImages(prev => [...prev, base64]); });
+            };
+            const removeJournalImageFromState = (index) => setLocalJournalImages(prev => prev.filter((_, i) => i !== index));
+
+            // --- NOTES ---
+            const saveNote = async () => {
+                if (!user || user.isAnonymous) return;
+                if(!currentNote.title.trim() && !noteContentRef.current.trim()) return;
+                
+                const noteId = currentNote.id || Date.now().toString();
+                const nowIso = new Date().toISOString();
+                
+                // NOT: Isınmayı önlemek için HTML sanitize işlemi tuş basımında değil, sadece kayıt sırasında yapılır.
+                const safeHTML = sanitizeHTML(noteContentRef.current);
+                
+                const noteData = { 
+                    title: currentNote.title || 'İsimsiz Not', 
+                    content: safeHTML,
+                    customDate: currentNote.customDate || getTodayDate(), 
+                    updatedAt: nowIso 
+                };
+                if(!currentNote.id) noteData.createdAt = nowIso;
+                
+                await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'notes', noteId), noteData, {merge:true});
+                setIsNoteEditing(false); // Kaydettikten sonra okuma moduna dön
+                setCurrentNote(prev => ({...prev, content: safeHTML, id: noteId}));
+                Toast.fire({icon:'success', title:'Not kaydedildi'});
+            };
+
+            const deleteNote = async (id, e) => {
+                if(e) e.stopPropagation();
+                if (!user || user.isAnonymous) return;
+                if(confirm('Notu silmek istediğinize emin misiniz?')) { 
+                    await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'notes', id)); 
+                    setShowNoteModal(false);
+                }
+            };
+
+            // --- PROFILE ---
+            const handleProfilePhotoUpload = (e) => {
+                const file = e.target.files[0]; if(!file) return;
+                compressImage(file, async (base64) => {
+                    if (!user || user.isAnonymous) return;
+                    await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'), { ...profile, avatarBase64: base64 }, {merge:true});
+                });
+            };
+
+            const handleSaveProfileInfo = async () => {
+                if (!user || user.isAnonymous) return;
+                const isGoogleAuth = user.providerData.some(p => p.providerId === 'google.com');
+
+                if(!isGoogleAuth && newPassword && newPassword !== newPasswordConfirm) { 
+                    Swal.fire('Hata', 'Yeni şifreler eşleşmiyor!', 'error'); return; 
+                }
+                setLoading(true);
+                try {
+                    if (editName !== user.displayName) await updateProfile(user, { displayName: editName });
+                    
+                    if (!isGoogleAuth && newPassword) {
+                        const credential = EmailAuthProvider.credential(user.email, currentPassword);
+                        await reauthenticateWithCredential(user, credential);
+                        await updatePassword(user, newPassword);
+                        setCurrentPassword(''); setNewPassword(''); setNewPasswordConfirm('');
+                        Toast.fire({ icon: 'success', title: 'Şifreniz güncellendi.' });
+                    }
+                    
+                    await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'), { ...profile, name: editName }, {merge:true});
+                    Toast.fire({ icon: 'success', title: 'Profil bilgileri güncellendi.' });
+                } catch (e) { 
+                    Swal.fire('Hata', 'Mevcut şifrenizi kontrol edin.', 'error'); 
+                }
+                setLoading(false);
+            };
+
+            const sendVerificationEmailManually = async () => {
+                try {
+                    await sendEmailVerification(user);
+                    Swal.fire('Başarılı', 'Doğrulama e-postası tekrar gönderildi.', 'success');
+                } catch(e) {
+                    Swal.fire('Hata', 'Çok fazla istek yapmış olabilirsiniz.', 'error');
+                }
+            }
+
+            // --- MEMOS & UTILS ---
+            const currentDayTasks = useMemo(() => {
+                return tasks.filter(t => t.date === selectedDate).sort((a,b)=> {
+                    const pMap = { 'Yüksek': 3, 'Orta': 2, 'Düşük': 1 };
+                    return (pMap[b.priority] || 0) - (pMap[a.priority] || 0);
+                });
+            }, [tasks, selectedDate]);
+            
+            const completedCount = currentDayTasks.filter(t => t.status === 'completed').length;
+            const progress = currentDayTasks.length ? Math.round((completedCount / currentDayTasks.length) * 100) : 0;
+
+            const changeSelectedDate = (offset) => {
+                const d = new Date(selectedDate); d.setDate(d.getDate() + offset);
+                setSelectedDate(d.toISOString().split('T')[0]);
+            };
+
+            const generateCalendarDays = () => {
+                const year = calDate.getFullYear(); const month = calDate.getMonth();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const firstDay = new Date(year, month, 1).getDay();
+                const startPadding = firstDay === 0 ? 6 : firstDay - 1;
+                
+                const days = [];
+                for(let i=0; i<startPadding; i++) days.push(null);
+                for(let i=1; i<=daysInMonth; i++) {
+                    const m = String(month + 1).padStart(2, '0'), day = String(i).padStart(2, '0');
+                    days.push(`${year}-${m}-${day}`);
+                }
+                return days;
+            };
+
+            const getPriorityColor = (priority) => {
+                if(priority === 'Yüksek') return 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.7)]';
+                if(priority === 'Orta') return 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.7)]';
+                return 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.7)]';
+            };
+
+            // Global Search
+            const searchResults = useMemo(() => {
+                if (!searchQuery.trim()) return null;
+                const q = searchQuery.toLowerCase();
+                const matchedTasks = tasks.filter(t => t.title.toLowerCase().includes(q) || (t.description && t.description.toLowerCase().includes(q)));
+                const matchedNotes = notes.filter(n => n.title.toLowerCase().includes(q) || n.content.toLowerCase().includes(q));
+                const matchedJournals = Object.entries(journals)
+                    .filter(([date, j]) => j.content && j.content.toLowerCase().includes(q))
+                    .map(([date, j]) => ({ date, ...j }))
+                    .sort((a,b) => new Date(b.date) - new Date(a.date));
+
+                return { tasks: matchedTasks, notes: matchedNotes, journals: matchedJournals, total: matchedTasks.length + matchedNotes.length + matchedJournals.length };
+            }, [searchQuery, tasks, notes, journals]);
+            
+            
+            // RENDERS ---
+            if (loading && !user) return <div className="min-h-screen flex justify-center items-center"><div className="loader-premium"></div></div>;
+
+            // ZORUNLU GİRİŞ EKRANI
+            if (!user || user.isAnonymous) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-100 dark:bg-slate-950">
+                        <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl w-full max-w-md p-8 border border-slate-200 dark:border-slate-800 relative overflow-hidden">
+                            <div className="text-center mb-8">
+                                <div className="bg-primary-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 text-white shadow-[0_10px_20px_rgba(37,99,235,0.3)]">
+                                    <LayoutDashboard size={32}/>
+                                </div>
+                                <h1 className="text-3xl font-extrabold text-slate-800 dark:text-white tracking-tight">LifeSpace <span className="text-primary-600">Pro</span></h1>
+                                <p className="text-slate-500 text-sm mt-1 font-medium">Lütfen verilerinize erişmek için hesap oluşturun veya giriş yapın.</p>
+                            </div>
+                            <form onSubmit={handleAuthForm} className="space-y-4">
+                                <input type="email" value={email} onChange={e=>setEmail(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl dark:text-white focus:border-primary-500 outline-none transition-colors" placeholder="E-Posta Adresiniz" required/>
+                                {authMode === 'register' && <input type="text" value={username} onChange={e=>setUsername(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl dark:text-white focus:border-primary-500 outline-none transition-colors" placeholder="Adınız Soyadınız" required/>}
+                                {authMode !== 'reset' && <input type="password" value={password} onChange={e=>setPassword(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl dark:text-white focus:border-primary-500 outline-none transition-colors" placeholder="Güvenli Şifreniz" required/>}
+                                
+                                <button type="submit" disabled={authLoading} className="w-full bg-primary-600 hover:bg-primary-500 text-white py-4 rounded-xl font-bold transition-transform active:scale-95 flex justify-center items-center h-14 shadow-lg shadow-primary-500/20">
+                                    {authLoading ? <div className="loader-premium border-white border-b-transparent"></div> : (authMode === 'register' ? 'Ücretsiz Kayıt Ol' : authMode === 'reset' ? 'Şifremi Sıfırla' : 'Giriş Yap')}
+                                </button>
+                            </form>
+
+                            {authMode !== 'reset' && (
+                                <button type="button" onClick={handleGoogleLogin} className="mt-4 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm">
+                                    <svg viewBox="0 0 24 24" width="20" height="20"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                                    Google ile {authMode === 'register' ? 'Kaydol' : 'Giriş Yap'}
+                                </button>
+                            )}
+
+                            <div className="mt-8 text-center flex flex-col gap-3 text-sm font-medium">
+                                {authMode === 'login' ? (
+                                    <>
+                                        <button onClick={()=>setAuthMode('reset')} className="text-primary-600 dark:text-primary-500 hover:underline">Şifremi Unuttum</button>
+                                        <button onClick={()=>setAuthMode('register')} className="text-slate-500">Hesabınız yok mu? <span className="text-slate-800 dark:text-white font-bold hover:underline">Kayıt Ol</span></button>
+                                    </>
+                                ) : authMode === 'register' ? (
+                                    <button onClick={()=>setAuthMode('login')} className="text-slate-500">Zaten hesabınız var mı? <span className="text-slate-800 dark:text-white font-bold hover:underline">Giriş Yap</span></button>
+                                ) : (
+                                    <button onClick={()=>setAuthMode('login')} className="text-slate-500"><span className="text-slate-800 dark:text-white font-bold hover:underline">Giriş Ekranına Dön</span></button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="min-h-screen pb-20 md:pb-0 md:pl-[260px] flex flex-col">
+                    
+                    {/* DESKTOP SIDEBAR */}
+                    <aside className="hidden md:flex flex-col fixed inset-y-0 left-0 w-[260px] bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 z-40 shadow-[4px_0_24px_rgba(0,0,0,0.02)] dark:shadow-none">
+                        <div className="p-6 flex items-center gap-3 border-b border-slate-100 dark:border-slate-800">
+                            <div className="bg-primary-600 text-white p-2 rounded-xl shadow-lg shadow-primary-500/30"><LayoutDashboard size={20}/></div>
+                            <span className="font-extrabold text-xl text-slate-800 dark:text-white tracking-tight">LifeSpace</span>
+                        </div>
+                        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+                            {[
+                                { id:'daily', icon: Home, label:'Günlük & Görevler' },
+                                { id:'archive', icon: CalendarDays, label:'Takvim & Arşiv' },
+                                { id:'notes', icon: BookOpen, label:'Not Defteri' },
+                               { id:'otherApp', icon: AppWindow, label:'Pomodoro' }, /* Pomodoro */
+                                { id:'settings', icon: Settings, label:'Ayarlar' }
+                            ].map(t => (
+                                <button key={t.id} onClick={()=>{setActiveTab(t.id); setSearchQuery('');}} className={`w-full flex items-center gap-3 p-3.5 rounded-xl font-semibold transition-all ${activeTab===t.id ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}>
+                                    <t.icon size={20} className={activeTab===t.id ? '' : 'opacity-70'}/> {t.label}
+                                </button>
+                            ))}
+                        </nav>
+                        <div className="p-4 border-t border-slate-100 dark:border-slate-800">
+                            <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 mb-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" onClick={()=>setActiveTab('settings')}>
+                                {profile.avatarBase64 ? <img src={profile.avatarBase64} className="w-10 h-10 rounded-full object-cover"/> : <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center"><User size={20} className="text-slate-500"/></div>}
+                                <div className="overflow-hidden">
+                                    <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{editName}</p>
+                                    <p className="text-xs text-slate-500 truncate">{user.email || 'Kullanıcı'}</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-2">
+                                <button onClick={()=>setDarkMode(!darkMode)} className="flex-1 flex items-center justify-center p-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors"><Sun size={18} className="hidden dark:block"/><Moon size={18} className="block dark:hidden"/></button>
+                                <button onClick={handleLogout} className="flex-1 flex items-center justify-center p-3 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-900/20 dark:hover:bg-rose-900/40 text-rose-600 transition-colors" title="Çıkış Yap"><LogOut size={18}/></button>
+                            </div>
+                        </div>
+                    </aside>
+
+                    {/* MOBILE HEADER */}
+                    <header className="md:hidden fixed top-0 w-full z-40 glass-header h-16 flex items-center justify-between px-4 shadow-sm">
+                        <div className="flex items-center gap-2 font-extrabold text-slate-800 dark:text-white text-xl">
+                            <div className="bg-primary-600 text-white p-1 rounded-lg"><LayoutDashboard size={20}/></div> LifeSpace
+                        </div>
+                        <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800">
+                            {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+                        </button>
+                    </header>
+
+                    {/* MOBILE BOTTOM NAV */}
+                    <nav className="md:hidden fixed bottom-0 w-full bg-white/95 dark:bg-slate-900/95 border-t border-slate-200 dark:border-slate-800 z-40 flex justify-around p-2 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+                         {[
+                                { id:'daily', icon: Home, label:'Gün' },
+                                { id:'archive', icon: CalendarDays, label:'Takvim' },
+                                { id:'notes', icon: BookOpen, label:'Notlar' },
+                                { id:'otherApp', icon: AppWindow, label:'Pomodoro' }, /* Pomodoro */
+                                { id:'settings', icon: Settings, label:'Ayarlar' }
+                            ].map(t => (
+                                <button key={t.id} onClick={()=>{setActiveTab(t.id); setSearchQuery('');}} className={`flex flex-col items-center p-2 rounded-xl transition-colors ${activeTab===t.id ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}>
+                                    <t.icon size={22} className="mb-1"/>
+                                    <span className="text-[10px] font-bold tracking-wide">{t.label}</span>
+                                </button>
+                            ))}
+                    </nav>
+
+                    {/* MAIN CONTENT AREA */}
+                    <main className="flex-1 p-4 md:p-8 pt-20 md:pt-8 max-w-6xl mx-auto w-full">
+                        
+                        {/* Uyarı: E-Posta doğrulanmamışsa */}
+                        {user && !user.isAnonymous && user.providerData.some(p => p.providerId === 'password') && !user.emailVerified && (
+                            <div className="bg-amber-100 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-400 p-4 rounded-xl mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div className="flex items-center gap-2 font-medium">
+                                    <MailCheck size={20} className="shrink-0"/>
+                                    Lütfen e-posta adresinizi doğrulayın. (Spam/Gereksiz kutusuna bakmayı unutmayın)
+                                </div>
+                                <button onClick={sendVerificationEmailManually} className="bg-amber-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-amber-600 transition-colors shrink-0">
+                                    Tekrar Gönder
+                                </button>
+                            </div>
+                        )}
+
+                        {/* TAB 1: DAILY VIEW */}
+                        {activeTab === 'daily' && (
+                            <div className="space-y-6 animate-fade-in">
+                                {/* Date Navigator */}
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                                    <div className="flex items-center gap-4">
+                                        <div className="bg-primary-50 dark:bg-primary-900/30 w-16 h-16 rounded-xl flex flex-col items-center justify-center text-primary-600 dark:text-primary-400 shadow-inner border border-primary-100/50 dark:border-primary-800/50">
+                                            <span className="text-xs font-bold uppercase tracking-widest">{new Date(selectedDate).toLocaleDateString('tr-TR',{month:'short'})}</span>
+                                            <span className="text-2xl font-black leading-none">{selectedDate.split('-')[2]}</span>
+                                        </div>
+                                        <div>
+                                            <h2 className="text-2xl font-black text-slate-800 dark:text-white capitalize tracking-tight">{new Date(selectedDate).toLocaleDateString('tr-TR',{weekday:'long'})}</h2>
+                                            <div className="text-sm font-medium text-slate-500 flex items-center gap-1">
+                                                {selectedDate === getTodayDate() ? <><Smile size={14} className="text-amber-500"/> Bugün harika bir gün!</> : selectedDate < getTodayDate() ? <><History size={14}/> Geçmişe bakılıyor.</> : <><Calendar size={14}/> Gelecek planlanıyor.</>}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex bg-slate-50 dark:bg-slate-950 rounded-xl p-1 w-full sm:w-auto border border-slate-200 dark:border-slate-800">
+                                        <button onClick={()=>changeSelectedDate(-1)} className="p-2 hover:bg-white dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-400 transition-colors shadow-sm"><ChevronLeft size={20}/></button>
+                                        <button onClick={()=>setSelectedDate(getTodayDate())} className="flex-1 sm:px-6 py-2 hover:bg-white dark:hover:bg-slate-800 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-300">Bugün</button>
+                                        <button onClick={()=>changeSelectedDate(1)} className="p-2 hover:bg-white dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-400 transition-colors shadow-sm"><ChevronRight size={20}/></button>
+                                    </div>
+                                </div>
+
+                                <div className="grid lg:grid-cols-[1.1fr_1fr] gap-6 lg:gap-8 items-start">
+                                    {/* Tasks Column */}
+                                    <div className="space-y-4">
+                                        <div className="flex justify-between items-center px-1">
+                                            <h3 className="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2"><ListChecks className="text-primary-500"/> Planlanan Görevler</h3>
+                                            <button onClick={()=>{setTaskForm({title:'', description:'', priority:'Orta', date:selectedDate, emoji:'📝', repeat:'none', subtasks: [], id:null}); setShowTaskModal(true);}} className="text-sm font-bold bg-slate-900 dark:bg-primary-600 text-white px-4 py-2 rounded-xl shadow-md hover:bg-slate-800 dark:hover:bg-primary-500 transition-colors flex items-center gap-2 active:scale-95"><Plus size={16}/> Görev Ekle</button>
+                                        </div>
+                                        
+                                        {currentDayTasks.length > 0 && (
+                                            <div className="px-2">
+                                                <div className="flex justify-between text-[11px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider"><span>Gelişim</span> <span>{progress}%</span></div>
+                                                <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                                                    <div className="h-full bg-primary-500 transition-all duration-700" style={{width: `${progress}%`}}></div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div className="space-y-3">
+                                            {currentDayTasks.length === 0 ? (
+                                                <div className="text-center py-16 bg-white/40 dark:bg-slate-900/30 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800">
+                                                    <div className="bg-slate-100 dark:bg-slate-800 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"><Smile size={24} className="text-slate-400"/></div>
+                                                    <p className="text-slate-500 dark:text-slate-400 font-bold text-sm">Zihnini boşalt, yeni bir görev ekle.</p>
+                                                </div>
+                                            ) : currentDayTasks.map(task => (
+                                                <div key={task.id} className={`bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md hover:border-primary-300 dark:hover:border-primary-700 group ${task.status === 'completed' ? 'opacity-50 bg-slate-50 dark:bg-slate-900/50 grayscale-[30%]' : ''}`}>
+                                                    <div className="flex gap-3">
+                                                        <button onClick={(e)=>toggleTaskStatus(task, e)} className={`mt-1 shrink-0 transition-all ${task.status === 'completed' ? 'text-primary-500 scale-110' : 'text-slate-300 hover:text-primary-400 dark:text-slate-600'}`}>
+                                                            {task.status === 'completed' ? <CheckCircle2 size={26} fill="currentColor" className="text-white dark:text-slate-900"/> : <Circle size={26}/>}
+                                                        </button>
+                                                        <div className="flex-1 min-w-0 cursor-pointer" onClick={()=>{setSelectedTaskForView(task);}}>
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <span className="text-lg leading-none">{task.emoji}</span>
+                                                                <h4 className={`font-bold text-base truncate ${task.status==='completed'?'line-through text-slate-500':'text-slate-800 dark:text-slate-100'}`}>{task.title}</h4>
+                                                                {/* Glowing Priority Dot */}
+                                                                <div className={`w-2 h-2 rounded-full shrink-0 ml-auto ${getPriorityColor(task.priority)}`} title={`Öncelik: ${task.priority}`}></div>
+                                                            </div>
+                                                            {task.description && <p className="text-[13px] text-slate-500 dark:text-slate-400 line-clamp-1 mb-2">{task.description}</p>}
+                                                            
+                                                            {/* Inline Subtasks Preview */}
+                                                            {task.subtasks && task.subtasks.length > 0 && (
+                                                                <div className="mt-2 space-y-1.5" onClick={e => e.stopPropagation()}>
+                                                                    {task.subtasks.slice(0, 2).map(st => (
+                                                                        <div key={st.id} className="flex items-center gap-2 group/st">
+                                                                            <button onClick={(e)=>toggleSubtask(task, st.id, e)} className={`shrink-0 ${st.completed ? 'text-primary-500' : 'text-slate-300 dark:text-slate-600 hover:text-primary-400'}`}>
+                                                                                {st.completed ? <CheckCircle2 size={14} fill="currentColor" className="text-white dark:text-slate-900"/> : <Circle size={14}/>}
+                                                                            </button>
+                                                                            <span className={`text-[12px] font-medium truncate ${st.completed ? 'line-through text-slate-400' : 'text-slate-600 dark:text-slate-400'}`}>{st.title}</span>
+                                                                        </div>
+                                                                    ))}
+                                                                    {task.subtasks.length > 2 && <span className="text-[10px] text-slate-400 font-bold ml-5">+{task.subtasks.length - 2} alt görev daha</span>}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Journal Column */}
+                                    <div className="space-y-4">
+                                        <div className="flex justify-between items-center px-1">
+                                            <h3 className="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2"><BookOpen className="text-amber-500"/> Dijital Günlük</h3>
+                                        </div>
+                                        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col focus-within:border-primary-400 transition-colors">
+                                            
+                                            {/* Çoklu Resim Alanı */}
+                                            {localJournalImages && localJournalImages.length > 0 && (
+                                                <div className="bg-slate-50 dark:bg-slate-950 p-3 border-b border-slate-100 dark:border-slate-800 flex gap-2 overflow-x-auto no-scrollbar">
+                                                    {localJournalImages.map((img, idx) => (
+                                                        <div key={idx} className="relative group shrink-0 w-24 h-24 sm:w-32 sm:h-32 rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700">
+                                                            <img src={img} className="w-full h-full object-cover cursor-pointer" onClick={() => setViewingImageIndex(idx)}/>
+                                                            <button onClick={()=>removeJournalImageFromState(idx)} className="absolute top-1 right-1 p-1.5 bg-black/60 hover:bg-rose-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"><Trash2 size={14}/></button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            <textarea 
+                                                value={localJournalContent}
+                                                onChange={(e)=>setLocalJournalContent(e.target.value)}
+                                                placeholder="Bugüne dair fikirlerinizi, duygularınızı veya toplantı notlarınızı yazın..."
+                                                className="w-full p-6 min-h-[300px] lg:min-h-[450px] bg-transparent outline-none resize-none text-slate-700 dark:text-slate-200 placeholder-slate-400 text-[15px] leading-relaxed"
+                                            ></textarea>
+                                            
+                                            <div className="bg-slate-50 dark:bg-slate-950 p-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                                                <button onClick={()=>journalFileRef.current.click()} className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-primary-600 hover:bg-white dark:hover:bg-slate-800 px-3 py-2 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors">
+                                                    <Camera size={20}/> <span className="hidden sm:inline">Görsel Ekle</span>
+                                                </button>
+                                                <input type="file" ref={journalFileRef} onChange={handleJournalImage} className="hidden" accept="image/*" multiple/>
+
+                                                <button 
+                                                    onClick={saveJournalToDB} 
+                                                    disabled={isJournalSaving}
+                                                    className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 dark:bg-primary-600 dark:hover:bg-primary-500 text-white px-6 py-2.5 rounded-xl font-bold shadow-md transition-all active:scale-95"
+                                                >
+                                                    {isJournalSaving ? <div className="loader-premium w-5 h-5 border-2 border-white border-b-transparent"></div> : <Save size={18}/>}
+                                                    Günlüğü Kaydet
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TAB 2: ARCHIVE, SEARCH & CALENDAR */}
+                        {activeTab === 'archive' && (
+                            <div className="space-y-6 animate-fade-in h-full flex flex-col">
+                                
+                                {/* ARAMA ÇUBUĞU */}
+                                <div className="relative">
+                                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={24}/>
+                                    <input 
+                                        type="text" 
+                                        value={searchQuery}
+                                        onChange={e => setSearchQuery(e.target.value)}
+                                        placeholder="Görev, not veya günlüklerde ara..."
+                                        className="w-full pl-14 pr-4 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm text-lg outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 font-medium transition-all"
+                                    />
+                                    {searchQuery && <button onClick={()=>setSearchQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 bg-slate-100 rounded-full"><X size={16}/></button>}
+                                </div>
+
+                                {/* ARAMA SONUÇLARI */}
+                                {searchQuery ? (
+                                    <div className="space-y-8 animate-slide-up">
+                                        <p className="font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-lg inline-block">"{searchQuery}" için {searchResults?.total} sonuç bulundu.</p>
+                                        
+                                        {searchResults.tasks.length > 0 && (
+                                            <div>
+                                                <h3 className="font-black text-lg text-slate-800 dark:text-white mb-3 flex items-center gap-2"><CheckCircle2 className="text-primary-500"/> Görevler</h3>
+                                                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                                    {searchResults.tasks.map(t => (
+                                                        <div key={t.id} onClick={()=>{setSelectedDate(t.date); setActiveTab('daily'); setSearchQuery('');}} className="glass-card p-4 cursor-pointer hover:border-primary-500 transition-colors">
+                                                            <div className="text-[11px] font-bold text-slate-400 mb-1.5">{formatDateTr(t.date)}</div>
+                                                            <div className="font-bold text-slate-800 dark:text-white flex items-start gap-2"><span className="mt-0.5">{t.emoji}</span> {t.title}</div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {searchResults.notes.length > 0 && (
+                                            <div>
+                                                <h3 className="font-black text-lg text-slate-800 dark:text-white mb-3 flex items-center gap-2"><FileText className="text-amber-500"/> Notlar</h3>
+                                                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                                    {searchResults.notes.map(n => (
+                                                        <div key={n.id} onClick={()=>{
+                                                            setCurrentNote(n); 
+                                                            noteContentRef.current = n.content; 
+                                                            setIsNoteEditing(false); 
+                                                            setShowNoteModal(true);
+                                                        }} className="glass-card p-4 cursor-pointer hover:border-amber-500 transition-colors">
+                                                            <div className="font-bold text-slate-800 dark:text-white mb-2 truncate">{n.title}</div>
+                                                            <div className="text-sm text-slate-500 custom-line-clamp" dangerouslySetInnerHTML={{__html: sanitizeHTML(n.content)}}></div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {searchResults.journals.length > 0 && (
+                                            <div>
+                                                <h3 className="font-black text-lg text-slate-800 dark:text-white mb-3 flex items-center gap-2"><BookOpen className="text-emerald-500"/> Günlükler</h3>
+                                                <div className="grid sm:grid-cols-2 gap-4">
+                                                    {searchResults.journals.map(j => (
+                                                        <div key={j.date} onClick={()=>{setSelectedDate(j.date); setActiveTab('daily'); setSearchQuery('');}} className="glass-card p-4 cursor-pointer hover:border-emerald-500 flex gap-4 transition-colors">
+                                                            {j.images && j.images[0] && <img src={j.images[0]} className="w-20 h-20 rounded-xl object-cover shrink-0 border border-slate-100 dark:border-slate-800"/>}
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="text-[11px] font-bold text-slate-400 mb-1">{formatDateTr(j.date)}</div>
+                                                                <div className="text-sm text-slate-700 dark:text-slate-300 custom-line-clamp font-medium">{j.content}</div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    /* NORMAL TAKVİM GÖRÜNÜMÜ */
+                                    <div className="glass-card p-4 sm:p-6 flex-1 flex flex-col shadow-sm">
+                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                                            <h2 className="text-2xl font-black text-slate-800 dark:text-white flex items-center gap-2"><CalendarDays className="text-primary-500"/> Takvim & Arşiv</h2>
+                                            
+                                            <div className="flex items-center gap-3 w-full sm:w-auto">
+                                                {/* TOPLU SİLME BUTONU */}
+                                                <button onClick={()=>{
+                                                    const mTasks = tasks.filter(t => t.date.startsWith(`${calDate.getFullYear()}-${String(calDate.getMonth()+1).padStart(2,'0')}`));
+                                                    if(mTasks.length===0) return Toast.fire({icon:'info', title:'Bu ay silinecek görev yok.'});
+                                                    setSelectedTaskIdsForDelete(mTasks.map(t=>t.id));
+                                                    setShowBulkDeleteModal(true);
+                                                }} className="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-xl transition-colors" title="Bu Aydaki Görevleri Yönet"><Trash2 size={20}/></button>
+                                                
+                                                <div className="flex flex-1 sm:flex-none justify-between bg-slate-50 dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                                                    <button onClick={()=>setCalDate(new Date(calDate.getFullYear(), calDate.getMonth()-1, 1))} className="p-2 hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-colors"><ChevronLeft size={20}/></button>
+                                                    <span className="font-bold flex items-center justify-center min-w-[120px] text-slate-700 dark:text-slate-200">{getMonthName(calDate.getMonth())} {calDate.getFullYear()}</span>
+                                                    <button onClick={()=>setCalDate(new Date(calDate.getFullYear(), calDate.getMonth()+1, 1))} className="p-2 hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-colors"><ChevronRight size={20}/></button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="calendar-grid mb-2">
+                                            {['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'].map(d => (
+                                                <div key={d} className="text-center text-xs font-bold text-slate-400 py-2 uppercase tracking-wider">{d}</div>
+                                            ))}
+                                        </div>
+                                        <div className="calendar-grid flex-1">
+                                            {generateCalendarDays().map((dateStr, idx) => {
+                                                if(!dateStr) return <div key={`empty-${idx}`} className="p-2 min-h-[70px] sm:min-h-[110px] bg-transparent"></div>;
+                                                
+                                                const dayNum = parseInt(dateStr.split('-')[2]);
+                                                const isToday = dateStr === getTodayDate();
+                                                const isPast = dateStr < getTodayDate();
+                                                const dayTasks = tasks.filter(t => t.date === dateStr);
+                                                const hasJournal = !!journals[dateStr]?.content || (journals[dateStr]?.images && journals[dateStr].images.length > 0);
+
+                                                return (
+                                                    <div key={dateStr} 
+                                                        onClick={()=>{ setSelectedDate(dateStr); setActiveTab('daily'); }}
+                                                        className={`p-2 min-h-[70px] sm:min-h-[110px] rounded-xl border cursor-pointer transition-all flex flex-col group
+                                                        ${isToday ? 'border-primary-500 bg-primary-50/50 dark:bg-primary-900/10 shadow-sm ring-1 ring-primary-500/50' : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-primary-300 hover:shadow-md'}
+                                                    `}>
+                                                        <div className="flex justify-between items-start mb-1.5">
+                                                            <span className={`text-sm font-bold w-6 h-6 flex items-center justify-center rounded-full transition-colors ${isToday ? 'bg-primary-500 text-white shadow-md' : 'text-slate-600 dark:text-slate-400 group-hover:text-primary-600 dark:group-hover:text-primary-400'}`}>{dayNum}</span>
+                                                            {hasJournal && <div className="w-2 h-2 rounded-full bg-amber-400 mt-1 shadow-[0_0_6px_rgba(251,191,36,0.8)]"></div>}
+                                                        </div>
+                                                        <div className="flex-1 flex flex-col gap-1 overflow-hidden">
+                                                            {/* Masaüstü liste görünümü */}
+                                                            <div className="hidden sm:flex flex-col gap-1">
+                                                                {dayTasks.slice(0, 3).map(t => {
+                                                                    let taskColor = '';
+                                                                    if (t.status === 'completed') taskColor = 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 line-through decoration-emerald-400 opacity-60';
+                                                                    else if (isPast) taskColor = 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 font-bold border border-rose-200 dark:border-rose-800/50 shadow-sm';
+                                                                    else taskColor = 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 font-medium';
+                                                                    
+                                                                    return (
+                                                                        <div key={t.id} className={`text-xs truncate px-1.5 py-0.5 rounded ${taskColor}`}>
+                                                                            {t.title}
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                                {dayTasks.length > 3 && <div className="text-[10px] text-slate-400 font-bold px-1 text-center">+{dayTasks.length - 3}</div>}
+                                                            </div>
+                                                            {/* Mobil nokta görünümü (Daha temiz) */}
+                                                            <div className="flex sm:hidden flex-wrap gap-1 mt-1 justify-start">
+                                                                {dayTasks.slice(0, 6).map(t => {
+                                                                    let dotColor = 'bg-blue-500';
+                                                                    if (t.status === 'completed') dotColor = 'bg-emerald-400';
+                                                                    else if (isPast) dotColor = 'bg-rose-500';
+                                                                    return <div key={t.id} className={`w-1.5 h-1.5 rounded-full ${dotColor}`}></div>
+                                                                })}
+                                                                {dayTasks.length > 6 && <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600"></div>}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* TAB 3: NOTES */}
+                        {activeTab === 'notes' && (
+                            <div className="space-y-6 animate-fade-in h-full flex flex-col">
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                                    <h2 className="text-2xl font-black text-slate-800 dark:text-white flex items-center gap-2"><FileText className="text-primary-500"/> Notlar & Dokümanlar</h2>
+                                    <button onClick={()=>{
+                                        setCurrentNote({id:null, title:'', content:'', customDate: getTodayDate(), updatedAt:null}); 
+                                        noteContentRef.current = '';
+                                        setIsNoteEditing(true); 
+                                        setShowNoteModal(true);
+                                    }} className="bg-slate-900 hover:bg-slate-800 dark:bg-primary-600 dark:hover:bg-primary-500 text-white px-5 py-2.5 rounded-xl font-bold shadow-md flex items-center justify-center gap-2 w-full sm:w-auto transition-transform active:scale-95"><Plus size={18}/> Yeni Not Ekle</button>
+                                </div>
+
+                                {notes.length === 0 ? (
+                                    <div className="flex-1 flex flex-col items-center justify-center text-center py-20 opacity-50 border-2 border-dashed border-slate-300 dark:border-slate-800 rounded-3xl">
+                                        <FileText size={64} className="mb-4 text-slate-400"/>
+                                        <p className="font-bold text-lg text-slate-600 dark:text-slate-400">Henüz hiç notunuz yok.</p>
+                                        <p className="text-sm text-slate-400">Toplantı, ders veya fikir notlarınızı buraya kaydedin.</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                                        {notes.map(note => (
+                                            <div key={note.id} onClick={()=>{
+                                                setCurrentNote(note); 
+                                                noteContentRef.current = note.content; 
+                                                setIsNoteEditing(false); // Okuma modunda aç
+                                                setShowNoteModal(true);
+                                            }} className="glass-card p-5 cursor-pointer hover:shadow-xl transition-all border border-slate-200 hover:border-primary-400 dark:border-slate-800 dark:hover:border-primary-600 group flex flex-col h-[220px]">
+                                                <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-2 truncate">{note.title}</h3>
+                                                <div className="text-sm text-slate-500 dark:text-slate-400 mb-4 flex-1 overflow-hidden relative">
+                                                    <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white dark:to-[#0f172a] pointer-events-none mt-12"></div>
+                                                    <div className="line-clamp-4" dangerouslySetInnerHTML={{__html: note.content || 'Boş not...'}}></div>
+                                                </div>
+                                                <div className="flex justify-between items-center text-[11px] text-slate-400 font-bold pt-3 border-t border-slate-100 dark:border-slate-800 uppercase tracking-wider">
+                                                    <div className="flex items-center gap-1"><Calendar size={12}/> {formatDateTr(note.customDate || note.updatedAt).split(' ')[0]}</div>
+                                                    <button onClick={(e)=>deleteNote(note.id, e)} className="p-1.5 hover:bg-rose-100 hover:text-rose-600 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16}/></button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+{activeTab === 'otherApp' && (
+    <div className="space-y-6 animate-fade-in h-full flex flex-col">
+        <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <h2 className="text-2xl font-black text-slate-800 dark:text-white flex items-center gap-2">
+                <AppWindow className="text-primary-500"/> Pomodoro
+            </h2>
+        </div>
+        
+        {/* İFRAME ALANI */}
+<div className="w-full bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden" style={{ minHeight: '85vh' }}>
+    <iframe 
+        src="./Pomodorosade/index.html" 
+        className="w-full border-none"
+        style={{ height: '85vh' }}
+        title="Pomodoro"
+    ></iframe>
+</div>
+)}
+
+                        {/* TAB 4: SETTINGS & SECURITY */}
+                        {activeTab === 'settings' && (
+                            <div className="space-y-6 max-w-3xl mx-auto animate-fade-in">
+                                <div className="glass-card rounded-[1.5rem] overflow-hidden shadow-sm">
+                                    <div className="bg-slate-50 dark:bg-slate-900 p-6 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                                        <div className="bg-primary-100 dark:bg-primary-900/30 p-2 rounded-lg text-primary-600 dark:text-primary-400"><User size={20}/></div>
+                                        <h2 className="font-bold text-xl text-slate-800 dark:text-white">Profil & Hesap Ayarları</h2>
+                                    </div>
+                                    <div className="p-6 md:p-8 space-y-8">
+                                        
+                                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                                            <div className="relative group cursor-pointer shrink-0" onClick={()=>profilePhotoRef.current.click()}>
+                                                {profile.avatarBase64 ? 
+                                                    <img src={profile.avatarBase64} className="w-28 h-28 rounded-full object-cover border-4 border-slate-100 dark:border-slate-800 shadow-md"/> : 
+                                                    <div className="w-28 h-28 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center border-4 border-white dark:border-slate-800 shadow-md text-slate-400"><Camera size={36}/></div>
+                                                }
+                                                <div className="absolute inset-0 bg-black/60 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-bold gap-1">
+                                                    <Camera size={18}/> Değiştir
+                                                </div>
+                                                <input type="file" ref={profilePhotoRef} onChange={handleProfilePhotoUpload} className="hidden" accept="image/*"/>
+                                            </div>
+                                            <div className="flex-1 w-full space-y-4">
+                                                <div>
+                                                    <label className="text-xs font-bold text-slate-500 block mb-1.5 uppercase tracking-wider">Ad Soyad</label>
+                                                    <input type="text" value={editName} onChange={e=>setEditName(e.target.value)} className="w-full p-4 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white rounded-xl outline-none focus:border-primary-500 font-medium transition-colors"/>
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs font-bold text-slate-500 block mb-1.5 uppercase tracking-wider">E-Posta (Değiştirilemez)</label>
+                                                    <input type="email" value={user.email || ''} disabled className="w-full p-4 border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/50 text-slate-500 rounded-xl outline-none cursor-not-allowed font-medium"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="border-t border-slate-100 dark:border-slate-800 pt-8">
+                                            <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-4 flex items-center gap-2"><Shield className="text-amber-500"/> Güvenlik Merkezi</h3>
+                                            
+                                            {user.providerData.some(p => p.providerId === 'google.com') ? (
+                                                <div className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-xl border border-blue-200 dark:border-blue-900/50 flex items-start gap-3 mb-6">
+                                                    <ShieldAlert size={20} className="shrink-0 text-blue-500 mt-0.5"/>
+                                                    <div className="text-sm text-blue-800 dark:text-blue-400 font-medium leading-relaxed">Sisteme Google hesabınız ile bağlandınız. Bu yüzden uygulamanın içinden şifre değiştirme işlemi yapamazsınız. Şifrenizi sadece Google üzerinden yönetebilirsiniz.</div>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <div className="bg-amber-50 dark:bg-amber-900/10 p-4 rounded-xl border border-amber-200 dark:border-amber-900/50 flex items-start gap-3 mb-6">
+                                                        <AlertTriangle size={20} className="shrink-0 text-amber-500 mt-0.5"/>
+                                                        <div className="text-sm text-amber-800 dark:text-amber-400 font-medium leading-relaxed">Şifrenizi değiştirmek için mevcut şifrenizi girmeniz zorunludur. Sadece adınızı güncelleyecekseniz bu kısmı boş bırakın.</div>
+                                                    </div>
+
+                                                    <div className="space-y-4">
+                                                        <div>
+                                                            <label className="text-xs font-bold text-slate-500 block mb-1.5 uppercase tracking-wider">Mevcut Şifreniz</label>
+                                                            <input type="password" value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} className="w-full p-4 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white rounded-xl outline-none focus:border-primary-500 transition-colors"/>
+                                                        </div>
+                                                        <div className="grid sm:grid-cols-2 gap-4">
+                                                            <div>
+                                                                <label className="text-xs font-bold text-slate-500 block mb-1.5 uppercase tracking-wider">Yeni Şifre</label>
+                                                                <input type="password" value={newPassword} onChange={e=>setNewPassword(e.target.value)} className="w-full p-4 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white rounded-xl outline-none focus:border-primary-500 transition-colors"/>
+                                                            </div>
+                                                            <div>
+                                                                <label className="text-xs font-bold text-slate-500 block mb-1.5 uppercase tracking-wider">Yeni Şifre (Tekrar)</label>
+                                                                <input type="password" value={newPasswordConfirm} onChange={e=>setNewPasswordConfirm(e.target.value)} className="w-full p-4 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white rounded-xl outline-none focus:border-rose-500 transition-colors"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                        
+                                        <button onClick={handleSaveProfileInfo} className="w-full bg-slate-900 hover:bg-slate-800 dark:bg-primary-600 dark:hover:bg-primary-500 text-white py-4 rounded-xl font-bold transition-transform active:scale-95 flex items-center justify-center gap-2 shadow-lg">
+                                            <Save size={20}/> Değişiklikleri Kaydet
+                                        </button>
+
+                                        {isInstallable && (
+                                            <div className="bg-primary-50 dark:bg-primary-900/20 p-5 rounded-2xl border border-primary-200 dark:border-primary-800/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="bg-primary-500 text-white p-3 rounded-xl shadow-lg shadow-primary-500/30"><Download size={24}/></div>
+                                                    <div>
+                                                        <h3 className="font-bold text-slate-800 dark:text-white text-lg">Uygulamayı Ana Ekrana Ekle</h3>
+                                                        <p className="text-sm text-slate-500 font-medium">LifeSpace Pro'ya cihazınızdan tek tıkla ve çok daha hızlı erişin.</p>
+                                                    </div>
+                                                </div>
+                                                <button onClick={handleInstallApp} className="w-full sm:w-auto bg-primary-600 hover:bg-primary-500 text-white px-6 py-3 rounded-xl font-bold shadow-md transition-colors active:scale-95">Şimdi Yükle</button>
+                                            </div>
+                                        )}
+                                        
+                                        <button onClick={handleLogout} className="w-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 py-4 rounded-xl font-bold transition-transform active:scale-95 flex items-center justify-center gap-2 shadow-sm mt-4">
+                                            <LogOut size={20}/> Güvenli Çıkış Yap
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                {/* TEHLİKELİ BÖLGE (DANGER ZONE) */}
+                                <div className="glass-card rounded-[1.5rem] overflow-hidden shadow-sm border border-rose-200 dark:border-rose-900/50">
+                                    <div className="bg-rose-50 dark:bg-rose-900/20 p-6 border-b border-rose-100 dark:border-rose-900/50 flex items-center gap-3">
+                                        <div className="bg-rose-100 dark:bg-rose-900/50 p-2 rounded-lg text-rose-600 dark:text-rose-400"><ShieldAlert size={20}/></div>
+                                        <h2 className="font-bold text-xl text-rose-800 dark:text-rose-400">Tehlikeli Bölge</h2>
+                                    </div>
+                                    <div className="p-6 md:p-8 space-y-4">
+                                        <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Tüm görevlerinizi, notlarınızı ve günlüklerinizi kalıcı olarak silebilirsiniz. Bu işlem geri alınamaz.</p>
+                                        <button onClick={()=>setShowWipeDataModal(true)} className="w-full bg-white dark:bg-slate-800 border-2 border-rose-200 hover:border-rose-500 dark:border-rose-900/50 dark:hover:border-rose-500 text-rose-600 py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2">
+                                            <Trash2 size={20}/> Tüm Verilerimi Temizle
+                                        </button>
+                                    </div>
+                                </div>
+
+                            </div>
+                        )}
+                    </main>
+
+                    {/* MODAL: TASK VIEW (KAPALI PENCERE ÖNİZLEMESİ) */}
+                    {selectedTaskForView && !showTaskModal && (
+                        <div className="fixed inset-0 bg-slate-900/60 flex items-end sm:items-center justify-center z-[60] p-0 sm:p-4 backdrop-blur-sm">
+                            <div className="bg-white dark:bg-slate-950 rounded-t-[2rem] sm:rounded-[1.5rem] w-full max-w-lg shadow-2xl animate-slide-up flex flex-col border border-slate-200 dark:border-slate-800">
+                                <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center shrink-0">
+                                    <div className="flex items-center gap-3">
+                                        <button onClick={()=>toggleTaskStatus(selectedTaskForView)} className={`transition-all ${selectedTaskForView.status === 'completed' ? 'text-primary-500 scale-110' : 'text-slate-300 hover:text-primary-400 dark:text-slate-600'}`}>
+                                            {selectedTaskForView.status === 'completed' ? <CheckCircle2 size={32} fill="currentColor" className="text-white dark:text-slate-900"/> : <Circle size={32}/>}
+                                        </button>
+                                        <div>
+                                            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">{formatDateTr(selectedTaskForView.date)}</div>
+                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${selectedTaskForView.priority === 'Yüksek' ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/30' : selectedTaskForView.priority === 'Orta' ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>{selectedTaskForView.priority} Öncelik</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button onClick={()=>{setTaskForm({...selectedTaskForView, repeat:'none'}); setShowTaskModal(true); setSelectedTaskForView(null);}} className="text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-3 py-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"><Edit3 size={16}/> Düzenle</button>
+                                        <button onClick={()=>setSelectedTaskForView(null)} className="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors"><X size={20}/></button>
+                                    </div>
+                                </div>
+                                <div className="p-6 space-y-6 overflow-y-auto max-h-[70vh]">
+                                    <h2 className="text-2xl font-black text-slate-800 dark:text-white leading-tight flex items-start gap-3">
+                                        <span className="text-3xl mt-0.5">{selectedTaskForView.emoji}</span>
+                                        <span className={selectedTaskForView.status === 'completed' ? 'line-through text-slate-500' : ''}>{selectedTaskForView.title}</span>
+                                    </h2>
+
+                                    {selectedTaskForView.description && (
+                                        <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                                            <p className="text-sm font-medium text-slate-600 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{selectedTaskForView.description}</p>
+                                        </div>
+                                    )}
+
+                                    {selectedTaskForView.subtasks && selectedTaskForView.subtasks.length > 0 && (
+                                        <div>
+                                            <label className="text-[11px] font-bold text-slate-400 block mb-3 uppercase tracking-wider">Alt Görevler</label>
+                                            <div className="space-y-2">
+                                                {selectedTaskForView.subtasks.map(st => (
+                                                    <div key={st.id} onClick={()=>toggleSubtask(selectedTaskForView, st.id)} className="flex items-center gap-3 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm cursor-pointer hover:border-primary-300 transition-colors">
+                                                        <button className={`shrink-0 ${st.completed ? 'text-primary-500' : 'text-slate-300 hover:text-primary-400 dark:text-slate-600'}`}>
+                                                            {st.completed ? <CheckCircle2 size={20} fill="currentColor" className="text-white dark:text-slate-900"/> : <Circle size={20}/>}
+                                                        </button>
+                                                        <span className={`text-sm font-medium ${st.completed ? 'line-through text-slate-400' : 'text-slate-700 dark:text-slate-200'}`}>{st.title}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* MODAL: TASK (GÖREV DÜZENLEME FORMU) */}
+                    {showTaskModal && (
+                        <div className="fixed inset-0 bg-slate-900/60 flex items-end sm:items-center justify-center z-[60] p-0 sm:p-4 backdrop-blur-sm">
+                            <div className="bg-white dark:bg-slate-950 rounded-t-[2rem] sm:rounded-[1.5rem] w-full max-w-lg shadow-2xl animate-slide-up flex flex-col max-h-[90vh] sm:max-h-[85vh] border border-slate-200 dark:border-slate-800">
+                                <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center shrink-0 bg-slate-50 dark:bg-slate-900 rounded-t-[2rem] sm:rounded-t-[1.5rem]">
+                                    <h3 className="font-black text-lg text-slate-800 dark:text-white flex items-center gap-2"><CheckCircle2 className="text-primary-500"/> {taskForm.id ? 'Görevi Düzenle' : 'Yeni Görev'}</h3>
+                                    <button onClick={()=>setShowTaskModal(false)} className="p-2 bg-white dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors shadow-sm"><X size={20}/></button>
+                                </div>
+                                <div className="p-6 space-y-6 overflow-y-auto">
+                                    
+                                    {/* EMOJI & TITLE */}
+                                    <div>
+                                        <div className="flex gap-3">
+                                            <div className="relative group">
+                                                <button className="w-14 h-14 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-2xl flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors shadow-inner">
+                                                    {taskForm.emoji}
+                                                </button>
+                                                <div className="absolute top-full left-0 mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-xl shadow-2xl w-[280px] max-h-[220px] overflow-y-auto grid grid-cols-6 gap-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                                                    {EMOJIS.map(e => <button key={e} onClick={(ev)=>{ev.preventDefault(); setTaskForm({...taskForm, emoji: e});}} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-xl flex justify-center">{e}</button>)}
+                                                </div>
+                                            </div>
+                                            <input type="text" value={taskForm.title} onChange={e=>setTaskForm({...taskForm, title: e.target.value})} className="flex-1 p-4 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 dark:text-white outline-none focus:border-primary-500 font-black text-lg placeholder-slate-400" placeholder="Görev Başlığı..."/>
+                                        </div>
+                                    </div>
+
+                                    {/* DESCRIPTION */}
+                                    <div>
+                                        <label className="text-[11px] font-bold text-slate-400 block mb-2 uppercase tracking-wider">Detay / Notlar</label>
+                                        <textarea value={taskForm.description} onChange={e=>setTaskForm({...taskForm, description: e.target.value})} className="w-full p-4 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 dark:text-white outline-none focus:border-primary-500 font-medium resize-none min-h-[80px] placeholder-slate-400" placeholder="İsteğe bağlı detaylar..."></textarea>
+                                    </div>
+
+                                    {/* SUBTASKS (ALT GÖREVLER) */}
+                                    <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+                                        <label className="text-[11px] font-bold text-slate-400 block mb-3 uppercase tracking-wider">Alt Görevler (Checklist)</label>
+                                        <div className="space-y-2 mb-3">
+                                            {taskForm.subtasks && taskForm.subtasks.map(st => (
+                                                <div key={st.id} className="flex justify-between items-center bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm">
+                                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300 line-clamp-1">{st.title}</span>
+                                                    <button onClick={()=>removeSubtaskFromForm(st.id)} className="text-slate-400 hover:text-rose-500 p-1"><X size={16}/></button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <input type="text" value={newSubtask} onChange={e=>setNewSubtask(e.target.value)} onKeyDown={e=>{if(e.key==='Enter') {e.preventDefault(); addSubtaskToForm();}}} className="flex-1 p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 dark:text-white outline-none focus:border-primary-500 text-sm" placeholder="Yeni alt görev ekle..."/>
+                                            <button onClick={(e)=>{e.preventDefault(); addSubtaskToForm();}} className="bg-slate-200 dark:bg-slate-700 hover:bg-primary-500 hover:text-white text-slate-600 dark:text-slate-300 px-4 rounded-lg font-bold transition-colors"><Plus size={18}/></button>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* DATE & PRIORITY */}
+                                    <div className="flex gap-4">
+                                        <div className="flex-1">
+                                            <label className="text-[11px] font-bold text-slate-400 block mb-2 uppercase tracking-wider">Tarih</label>
+                                            <input type="date" value={taskForm.date} onChange={e=>setTaskForm({...taskForm, date: e.target.value})} className="w-full p-3.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 dark:text-white outline-none focus:border-primary-500 font-bold"/>
+                                        </div>
+                                        <div className="flex-1">
+                                            <label className="text-[11px] font-bold text-slate-400 block mb-2 uppercase tracking-wider">Öncelik</label>
+                                            <select value={taskForm.priority} onChange={e=>setTaskForm({...taskForm, priority: e.target.value})} className="w-full p-3.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 dark:text-white outline-none focus:border-primary-500 font-bold appearance-none">
+                                                <option value="Düşük">Düşük</option>
+                                                <option value="Orta">Orta</option>
+                                                <option value="Yüksek">Yüksek</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {/* YENİ NESİL ÇOKLU EKLEME BUTONLARI & TARİH ARALIĞI */}
+                                    {!taskForm.id && (
+                                        <div>
+                                            <label className="text-[11px] font-bold text-primary-600 dark:text-primary-400 block mb-2 uppercase tracking-wider flex items-center gap-1"><Repeat size={14}/> Toplu / Çoklu Ekleme</label>
+                                            <div className="grid grid-cols-2 gap-2 mb-2">
+                                                <button onClick={()=>setTaskForm({...taskForm, repeat: 'none'})} className={`p-2.5 rounded-xl border font-bold text-xs transition-all ${taskForm.repeat === 'none' ? 'bg-primary-50 border-primary-500 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400' : 'bg-white border-slate-200 text-slate-500 dark:bg-slate-900 dark:border-slate-700'}`}>Sadece Bu Gün</button>
+                                                <button onClick={()=>setTaskForm({...taskForm, repeat: 'this_week'})} className={`p-2.5 rounded-xl border font-bold text-xs transition-all ${taskForm.repeat === 'this_week' ? 'bg-primary-50 border-primary-500 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400' : 'bg-white border-slate-200 text-slate-500 dark:bg-slate-900 dark:border-slate-700'}`}>Haftanın Tümü</button>
+                                                <button onClick={()=>setTaskForm({...taskForm, repeat: 'this_month'})} className={`p-2.5 rounded-xl border font-bold text-xs transition-all ${taskForm.repeat === 'this_month' ? 'bg-primary-50 border-primary-500 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400' : 'bg-white border-slate-200 text-slate-500 dark:bg-slate-900 dark:border-slate-700'}`}>Ayın Tümü</button>
+                                                <button onClick={()=>setTaskForm({...taskForm, repeat: 'custom_range'})} className={`p-2.5 rounded-xl border font-bold text-xs transition-all ${taskForm.repeat === 'custom_range' ? 'bg-primary-50 border-primary-500 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400' : 'bg-white border-slate-200 text-slate-500 dark:bg-slate-900 dark:border-slate-700'}`}>Tarih Aralığı...</button>
+                                            </div>
+                                            {taskForm.repeat === 'custom_range' && (
+                                                <div className="mt-3 p-3 bg-primary-50/50 dark:bg-primary-900/10 rounded-xl border border-primary-100 dark:border-primary-800/50 flex items-center gap-3 animate-fade-in">
+                                                    <span className="text-sm font-bold text-slate-500">Bitiş:</span>
+                                                    <input type="date" value={taskForm.repeatEndDate} onChange={e=>setTaskForm({...taskForm, repeatEndDate: e.target.value})} className="flex-1 p-2.5 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 dark:text-white outline-none focus:border-primary-500 text-sm font-bold"/>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                </div>
+                                <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex gap-3 bg-slate-50 dark:bg-slate-900 rounded-b-[2rem] sm:rounded-b-[1.5rem]">
+                                    {taskForm.id && <button onClick={()=>{deleteTask(taskForm.id);}} className="p-4 bg-white dark:bg-slate-800 border border-rose-100 dark:border-rose-900 text-rose-500 rounded-xl hover:bg-rose-50 transition-colors shadow-sm"><Trash2 size={20}/></button>}
+                                    <button onClick={saveTask} className="flex-1 bg-slate-900 hover:bg-slate-800 dark:bg-primary-600 dark:hover:bg-primary-500 text-white py-4 rounded-xl font-bold flex justify-center items-center gap-2 shadow-lg transition-transform active:scale-95 text-lg"><Save size={20}/> Kaydet</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* MODAL: WIPE DATA CONFIRMATION */}
+                    {showWipeDataModal && (
+                        <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-[70] p-4 backdrop-blur-sm">
+                            <div className="bg-white dark:bg-slate-950 rounded-3xl w-full max-w-md shadow-2xl animate-pop-in flex flex-col border border-slate-200 dark:border-slate-800 overflow-hidden">
+                                <div className="p-5 border-b border-rose-100 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-900/20">
+                                    <h3 className="font-black text-xl text-rose-600 dark:text-rose-400 flex items-center gap-2"><ShieldAlert size={24}/> Güvenlik Doğrulaması</h3>
+                                </div>
+                                <div className="p-6">
+                                    <p className="font-bold text-slate-800 dark:text-slate-200 mb-2">Tüm verilerinizi (görevler, notlar, günlükler) kalıcı olarak siliyorsunuz!</p>
+                                    
+                                    {user.providerData.some(p => p.providerId === 'google.com') ? (
+                                        <p className="text-sm text-slate-500 mb-6">Sisteme Google hesabınız ile bağlandınız. Bu tehlikeli işlemi onaylamak için verilerin silineceği butona bastığınızda Google doğrulama penceresi açılacaktır.</p>
+                                    ) : (
+                                        <>
+                                            <p className="text-sm text-slate-500 mb-6">Bu işlemi onaylamak için lütfen şifrenizi iki defa girin.</p>
+                                            <div className="space-y-4">
+                                                <input type="password" value={wipePassword} onChange={e=>setWipePassword(e.target.value)} className="w-full p-4 border border-rose-200 dark:border-rose-900 bg-rose-50/50 dark:bg-rose-950 dark:text-white rounded-xl outline-none focus:border-rose-500 transition-colors" placeholder="Mevcut Şifreniz" required/>
+                                                <input type="password" value={wipePasswordConfirm} onChange={e=>setWipePasswordConfirm(e.target.value)} className="w-full p-4 border border-rose-200 dark:border-rose-900 bg-rose-50/50 dark:bg-rose-950 dark:text-white rounded-xl outline-none focus:border-rose-500 transition-colors" placeholder="Şifrenizi Tekrar Girin" required/>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                                <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex gap-2 bg-slate-50 dark:bg-slate-900">
+                                    <button onClick={()=>{setShowWipeDataModal(false); setWipePassword(''); setWipePasswordConfirm('');}} className="flex-1 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold hover:bg-slate-50 transition-colors">İptal Et</button>
+                                    <button onClick={executeWipeData} className="flex-1 p-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold shadow-lg transition-colors">Kalıcı Olarak Sil</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* MODAL: BULK DELETE TASKS */}
+                    {showBulkDeleteModal && (
+                        <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-[60] p-4 backdrop-blur-sm">
+                            <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md shadow-2xl animate-pop-in flex flex-col border border-slate-200 dark:border-slate-800 overflow-hidden">
+                                <div className="p-5 border-b border-slate-100 dark:border-slate-800 bg-rose-50 dark:bg-rose-900/20">
+                                    <h3 className="font-black text-lg text-rose-600 dark:text-rose-400 flex items-center gap-2"><AlertTriangle size={20}/> Toplu Görev Silme</h3>
+                                    <p className="text-xs text-rose-500 mt-1">{getMonthName(calDate.getMonth())} {calDate.getFullYear()} ayındaki tüm görevler ({selectedTaskIdsForDelete.length}) silinecek.</p>
+                                </div>
+                                <div className="p-6 text-center">
+                                    <Trash2 size={48} className="mx-auto text-slate-300 dark:text-slate-600 mb-4"/>
+                                    <p className="font-medium text-slate-600 dark:text-slate-300">Bu işlem bu aydaki tüm görevleri kalıcı olarak siler ve geri alınamaz.</p>
+                                </div>
+                                <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex gap-2 bg-slate-50 dark:bg-slate-950">
+                                    <button onClick={()=>setShowBulkDeleteModal(false)} className="flex-1 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold hover:bg-slate-50">İptal Et</button>
+                                    <button onClick={executeBulkDelete} className="flex-1 p-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold shadow-lg">Evet, Hepsini Sil</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* MODAL: RICH TEXT NOTE (OKUMA VE DÜZENLEME MODU) */}
+                    {showNoteModal && (
+                        <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-[60] p-0 sm:p-6 backdrop-blur-sm">
+                            <div className="bg-white dark:bg-slate-950 rounded-t-[1.5rem] sm:rounded-[1.5rem] w-full max-w-4xl shadow-2xl animate-slide-up flex flex-col h-[100vh] sm:h-[85vh] border border-slate-200 dark:border-slate-800 mt-auto sm:mt-0">
+                                <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center shrink-0 bg-slate-50 dark:bg-slate-900">
+                                    <div className="flex-1 mr-2 sm:mr-4 flex flex-col overflow-hidden">
+                                        {isNoteEditing ? (
+                                            <input type="text" value={currentNote.title} onChange={e=>setCurrentNote({...currentNote, title: e.target.value})} placeholder="Not Başlığı..." className="text-xl sm:text-2xl font-black bg-transparent outline-none text-slate-800 dark:text-white w-full placeholder-slate-400"/>
+                                        ) : (
+                                            <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white truncate">{currentNote.title || 'İsimsiz Not'}</h2>
+                                        )}
+                                        
+                                        <div className="flex items-center gap-2 mt-1.5">
+                                            <Calendar size={12} className="text-slate-400"/>
+                                            {isNoteEditing ? (
+                                                <input type="date" value={currentNote.customDate || getTodayDate()} onChange={e=>setCurrentNote({...currentNote, customDate: e.target.value})} className="text-xs font-bold text-slate-500 bg-transparent outline-none cursor-pointer uppercase"/>
+                                            ) : (
+                                                <span className="text-xs font-bold text-slate-500 uppercase">{formatDateTr(currentNote.customDate || currentNote.updatedAt)}</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-1 sm:gap-2">
+                                        {isNoteEditing ? (
+                                            <button onClick={saveNote} className="bg-slate-900 dark:bg-primary-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold text-sm hover:bg-slate-800 dark:hover:bg-primary-500 flex items-center gap-2 shadow-md"><Save size={18}/> <span className="hidden sm:inline">Kaydet</span></button>
+                                        ) : (
+                                            <button onClick={()=>setIsNoteEditing(true)} className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center gap-2"><Edit3 size={18}/> <span className="hidden sm:inline">Düzenle</span></button>
+                                        )}
+                                        <button onClick={()=>setShowNoteModal(false)} className="p-2.5 sm:p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"><X size={20}/></button>
+                                    </div>
+                                </div>
+                                <div className="flex-1 overflow-hidden flex flex-col bg-slate-50 dark:bg-slate-900 p-0 sm:p-4 sm:pb-0">
+                                    {isNoteEditing ? (
+                                        <RichEditor key={currentNote.id || 'new'} initialContent={currentNote.content} contentRef={noteContentRef} />
+                                    ) : (
+                                        <div className="read-only-note overflow-y-auto p-5 sm:p-2 bg-white dark:bg-slate-950 sm:rounded-2xl border-x-0 sm:border border-slate-200 dark:border-slate-800 h-full" dangerouslySetInnerHTML={{__html: sanitizeHTML(currentNote.content) || '<p class="text-slate-400 italic">Bu not boş...</p>'}}></div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* MODAL: IMAGE VIEWER (FULL SCREEN GALLERY) */}
+                    {viewingImageIndex !== null && localJournalImages.length > 0 && (
+                        <div className="fixed inset-0 bg-black/95 z-[70] flex flex-col items-center justify-center p-4 backdrop-blur-md" onClick={() => setViewingImageIndex(null)}>
+                            <div className="absolute top-4 w-full flex justify-between px-4 z-10">
+                                <span className="text-white/50 font-bold bg-black/50 px-3 py-1 rounded-lg">{viewingImageIndex + 1} / {localJournalImages.length}</span>
+                                <button className="text-white p-2 bg-black/50 rounded-full hover:bg-rose-600 transition-colors"><X size={24}/></button>
+                            </div>
+                            
+                            <div className="relative w-full max-w-4xl h-full flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                                {localJournalImages.length > 1 && (
+                                    <button onClick={(e)=>{e.stopPropagation(); setViewingImageIndex(prev => prev === 0 ? localJournalImages.length - 1 : prev - 1);}} className="absolute left-0 p-3 bg-black/50 hover:bg-black text-white rounded-full transition-colors"><ChevronLeft size={32}/></button>
+                                )}
+                                
+                                <img src={localJournalImages[viewingImageIndex]} className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl" />
+                                
+                                {localJournalImages.length > 1 && (
+                                    <button onClick={(e)=>{e.stopPropagation(); setViewingImageIndex(prev => prev === localJournalImages.length - 1 ? 0 : prev + 1);}} className="absolute right-0 p-3 bg-black/50 hover:bg-black text-white rounded-full transition-colors"><ChevronRight size={32}/></button>
+                                )}
+                            </div>
+                            
+                            {/* Thumbnails */}
+                            <div className="absolute bottom-4 flex gap-2 overflow-x-auto max-w-full px-4" onClick={e=>e.stopPropagation()}>
+                                {localJournalImages.map((img, idx) => (
+                                    <img key={idx} src={img} onClick={()=>setViewingImageIndex(idx)} className={`w-16 h-16 object-cover rounded-lg cursor-pointer border-2 transition-all ${idx === viewingImageIndex ? 'border-primary-500 scale-110' : 'border-transparent opacity-50 hover:opacity-100'}`}/>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
